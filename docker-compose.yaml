@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  api:
+    image: localhost/openwa
+    volumes:
+      - ./services/api/volumes/data:/app/data
+    environment:
+      # engine: 'whatsapp-web.js' | 'baileys'
+      ENGINE_TYPE: whatsapp-web.js
+
+      # db config
+      DATABASE_TYPE: ${API_DB_DRIVER}
+      DATABASE_NAME: ${API_DB_NAME}
+      DATABASE_HOST: ${API_DB_HOST}
+      DATABASE_PORT: ${API_DB_PORT}
+      DATABASE_USERNAME: ${API_DB_USERNAME}
+      DATABASE_PASSWORD: ${API_DB_PASSWORD}
+
+      # redis
+      REDIS_ENABLED: 'true'
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+
+      # auth
+      API_MASTER_KEY: ${API_KEY}
+      SSRF_ALLOWED_HOSTS: cashbook
+      WEBHOOK_SSRF_PROTECT: 'false'
+      CSP_UPGRADE_INSECURE_REQUESTS: 'false'
+
+    networks:
+      - redis
+      - whatsapp
+    ports:
+      - 2785:2785
+
+  redis:
+    image: docker.io/redis:${REDIS_VERSION}-alpine
+    volumes:
+      - ./services/redis/volumes/data:/data
+    command:
+      - --port $REDIS_PORT
+    networks:
+      - redis
+
+networks:
+  redis:
+  whatsapp:
+    external: true
+    name: ${WHATSAPP_NETWORK}
